@@ -1,6 +1,9 @@
+from api import API
+
 class CommandHandler:
 
     def __init__(self):
+        self.api = API()
         self._functions = {
             'ping': self.ping
         }
