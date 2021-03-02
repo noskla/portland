@@ -1,11 +1,13 @@
 import discord, logging, sys
 from config import Config
+from commandhandler import CommandHandler
 
 
 class Portland(discord.Client):
 
     def __init__(self, *args, **kwargs):
         super(Portland, self).__init__(*args, **kwargs)
+        self.command_handler = CommandHandler()
         self.discoLogger, self.discoLogFile = None, None
         self.init_logger()
 
@@ -23,4 +25,11 @@ class Portland(discord.Client):
     async def on_ready(self):
         print('Portland is connected to Discord and logged in as {}'.format(self.user.name))
 
-
+    async def on_message(self, msg):
+        if not msg.content.startswith(Config.default_prefix) or msg.author.bot:
+            return
+        try:
+            command, arguments = msg.content.split(' ', 1)
+        except ValueError:
+            command, arguments = msg.content, ''
+        await self.command_handler.resolve(command[1:], arguments, msg, self)
