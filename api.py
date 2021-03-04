@@ -33,3 +33,11 @@ class API:
     def find_song(self, search_query):
         r = requests.get('{}/song/search?query={}'.format(self.url, urllib.parse.quote(search_query)))
         return _check_errors(r)
+
+    def get_queue(self):
+        r = requests.get('{}/queue'.format(self.url))
+        return _check_errors(r)
+
+    def history(self):
+        r = requests.get('{}/history?limit=5'.format(self.url))
+        return _check_errors(r)
