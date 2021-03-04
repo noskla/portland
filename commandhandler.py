@@ -11,7 +11,12 @@ class CommandHandler:
         }
 
     async def resolve(self, cmd, args, msgctx, client):
-        await self._functions[cmd](args, msgctx, client)
+        try:
+            await self._functions[cmd](args, msgctx, client)
+        except KeyError:
+            await msgctx.channel.send(
+                '{}, nie zrozumiałam tego polecenia, upewnij się, że ono istnieje oraz, że zostało napisane poprawnie.'.format(
+                    msgctx.author.mention))
 
     async def song(self, args, msgctx, client):
         if len(args) <= 0:
