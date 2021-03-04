@@ -1,5 +1,14 @@
 from config import Config
-import requests, sys
+import requests, sys, urllib.parse
+
+
+def _check_errors(response):
+    if response.status_code != 200:
+        return {'status': 'Err', 'error': response.text}
+    try:
+        return response.json()
+    except ValueError:
+        return {'status': 'Err', 'error': response.text}
 
 
 class API:
@@ -11,11 +20,16 @@ class API:
         else:
             print('API test successful')
 
+    # -- -- --
+
     def get_songs(self, page=1):
         r = requests.get('{}/songs?page={}'.format(self.url, page))
-        if r.status_code != 200:
-            return {'status': 'Err', 'error': r.text}
-        try:
-            return r.json()
-        except ValueError:
-            return {'status': 'Err', 'error': r.text}
+        return _check_errors(r)
+
+    def get_song(self, song_id):
+        r = requests.get('{}/song/{}'.format(self.url, str(song_id)))
+        return _check_errors(r)
+
+    def find_song(self, search_query):
+        r = requests.get('{}/song/search?query={}'.format(self.url, urllib.parse.quote(search_query)))
+        return _check_errors(r)
