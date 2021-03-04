@@ -23,15 +23,12 @@ class CommandHandler:
             await msgctx.channel.send(
                 '{}, potrzebuję ID utworu lub zapytania wyszukiwania.'.format(msgctx.author.mention))
             return
-        song_id = args
-        mode = 'exact_match' if song_id.isnumeric() else 'search'
+        mode = 'exact_match' if args.isnumeric() else 'search'
         r, song = None, None
         if mode == 'exact_match':
-            r = self.api.get_song(int(song_id))
-            song = r['song']
+            r = self.api.get_song(int(args)); song = r['song']
         elif mode == 'search':
-            r = self.api.find_song(song_id)
-            song = r['songs'][0]
+            r = self.api.find_song(args); song = r['songs'][0]
 
         if r['status'] == 'error':
             await msgctx.channel.send('{}, wystąpił błąd: {}'.format(msgctx.author.mention, r['text']))
@@ -41,7 +38,7 @@ class CommandHandler:
                               url='https://youtube.com/results?search_query={}'.format(
                                   urllib.parse.quote(song['artist'] + ' - ' + song['title'])))
         embed.set_thumbnail(url='{}/song/{}/albumart'.format(self.api.url,
-                                                             (song_id if song_id.isnumeric() else str(song['ID']))))
+                                                             (args if args.isnumeric() else str(song['ID']))))
         embed.add_field(name='Album', value=song['album'] if song['album'] != 'Single' else 'Brak', inline=True)
         embed.add_field(name='Gatunek', value=song['genre'], inline=True)
         embed.add_field(name='Rok premiery', value=song['date_released'], inline=True)
