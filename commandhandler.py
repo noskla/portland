@@ -108,10 +108,11 @@ class CommandHandler:
         if msgctx.author.voice is None:
             return await msgctx.channel.send('{}, najpierw dołącz na kanał głosowy, na którym powinnam grać.'.format(
                 msgctx.author.mention))
-        if msgctx.author.voice.channel.user_limit <= len(msgctx.author.voice.channel.members):
-            return await msgctx.channel.send(
-                '{}, kanał głosowy, na którym się znajdujesz jest pełny i nie mogę dołączyć.'.format(
-                    msgctx.author.mention))
+        if msgctx.author.voice.channel.user_limit != 0:
+            if msgctx.author.voice.channel.user_limit <= len(msgctx.author.voice.channel.members):
+                return await msgctx.channel.send(
+                    '{}, kanał głosowy, na którym się znajdujesz jest pełny i nie mogę dołączyć.'.format(
+                        msgctx.author.mention))
         if not self.voice.voice_enabled:
             return await msgctx.channel.send('{}, wsparcie dla kanałów głosowych jest wyłączone.'.format(
                 msgctx.author.mention))
