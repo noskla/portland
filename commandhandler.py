@@ -85,9 +85,7 @@ class CommandHandler:
         r = self.api.playing_now()
         if r['status'] != 'ok':
             return await msgctx.channel.send('{}, wystąpił błąd: {}'.format(msgctx.author.mention, r['error']))
-        embed = discord.Embed(type='rich', title=r['title'],
-            url='https://youtube.com/results?search_query={}'.format(
-            urllib.parse.quote(r['artist'] + ' - ' + r['title'])))
+        embed = discord.Embed(type='rich', title=r['title'], url='https://laspegas.us/portland')
         embed.set_thumbnail(url='{}/song/{}/albumart'.format(self.api.url, str(r['ID'])))
         embed.add_field(name='Album', value=r['album'] if r['album'] != 'Single' else 'Brak', inline=True)
         embed.add_field(name='Gatunek', value=r['genre'], inline=True)
