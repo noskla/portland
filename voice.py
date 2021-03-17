@@ -21,8 +21,10 @@ class Voice:
             now = api.playing_now()
             if self.song_data['ID'] != now['ID']:
                 self.song_data = api.playing_now()
-                await client.change_presence(activity=discord.Game(
-                    "▶️ {} by {}".format(now['title'], now['artist'])))
+                await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
+                                                                       name="\"{}\" by {} on laspegas.us".format(
+                                                                           now['title'], now['artist']),
+                                                                       url="https://laspegas.us/"))
             await asyncio.sleep(15)
 
     def start_info_loop(self, api, client):
