@@ -2,7 +2,7 @@ from api import API
 from voice import Voice
 from config import Config
 from datetime import datetime, timezone
-import discord, urllib.parse, pytz, locale, asyncio, sys
+import discord, urllib.parse, pytz, locale, asyncio
 
 
 class CommandHandler:
@@ -15,7 +15,8 @@ class CommandHandler:
             'next': self.next,
             'last': self.last,
             'now': self.now,
-            'join': self.join
+            'join': self.join,
+            'leave': self.leave
         }
         locale.setlocale(locale.LC_TIME, 'pl_PL')
 
@@ -115,9 +116,7 @@ class CommandHandler:
             return await msgctx.channel.send('{}, wsparcie dla kanałów głosowych jest wyłączone.'.format(
                 msgctx.author.mention))
         try:
-            await self.voice.voice_channels[msgctx.guild.id].disconnect(force=True)
-            self.voice.voice_channels[msgctx.guild.id].cleanup()
-            self.voice.voice_channels.pop(msgctx.guild.id)
+            await self.leave(args, msgctx, client, False)
         except KeyError:
             pass
 
@@ -133,17 +132,24 @@ class CommandHandler:
                     msgctx.author.mention))
         except discord.ClientException as err:
             print("Error connecting to the voice channel: ", err)
-            await msgctx.guild.voice_client.disconnect()
-            msgctx.guild.voice_client.cleanup()
+            await self.leave(args, msgctx, client, False)
             return await msgctx.channel.send(
                 '{}, błąd: według mnie nie jestem połączona z kanałem, ale Discord myśli,' +
                 ' że jestem? Spróbuj ponownie za chwilę, lub poinformuj administratora.'.format(
                     msgctx.author.mention))
         if self.voice.audio_source is None:
             await msgctx.channel.send('{}, źródło jest niedostępne.'.format(msgctx.author.mention))
-            await self.voice.voice_channels[msgctx.guild.id].disconnect(force=True)
-            self.voice.voice_channels[msgctx.guild.id].cleanup()
-            self.voice.voice_channels.pop(msgctx.guild.id)
+            await self.leave(args, msgctx, client, False)
             return
 
-        self.voice.voice_channels[msgctx.guild.id].play(self.voice.audio_source)
+        if not self.voice.voice_channels[msgctx.guild.id].is_playing():
+            self.voice.voice_channels[msgctx.guild.id].play(self.voice.audio_source)
+
+    async def leave(self, args, msgctx, client, send_message=True):
+        self.voice.voice_channels[msgctx.guild.id].stop()
+        await self.voice.voice_channels[msgctx.guild.id].disconnect()
+        self.voice.voice_channels[msgctx.guild.id].cleanup()
+        self.voice.voice_channels.pop(msgctx.guild.id)
+        self.voice.restart_source()
+        if send_message:
+            await msgctx.channel.send('{}, ok, wychodzę z kanału...'.format(msgctx.author.mention))

@@ -23,7 +23,7 @@ class Voice:
                 self.song_data = api.playing_now()
                 await client.change_presence(activity=discord.Game(
                     "▶️ {} by {}".format(now['title'], now['artist'])))
-            await asyncio.sleep(5)
+            await asyncio.sleep(15)
 
     def start_info_loop(self, api, client):
         asyncio.create_task(self._get_now_playing_loop(api, client))
