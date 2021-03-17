@@ -24,6 +24,7 @@ class Portland(discord.Client):
 
     async def on_ready(self):
         print('Portland is connected to Discord and logged in as {}'.format(self.user.name))
+        self.command_handler.start_voice_info_loop(self)
 
     async def on_message(self, msg):
         if not msg.content.startswith(Config.default_prefix) or msg.author.bot:

@@ -9,6 +9,7 @@ class CommandHandler:
 
     def __init__(self):
         self.api = API()
+        self.voice = None
         self._functions = {
             'song': self.song,
             'next': self.next,
@@ -17,7 +18,10 @@ class CommandHandler:
             'join': self.join
         }
         locale.setlocale(locale.LC_TIME, 'pl_PL')
+
+    def start_voice_info_loop(self, client):
         self.voice = Voice()
+        self.voice.start_info_loop(self.api, client)
 
     async def resolve(self, cmd, args, msgctx, client):
         try:
