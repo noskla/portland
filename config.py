@@ -9,5 +9,5 @@ class Config:
     voice_enabled = True
     # Auto join if listeners are available on the channel
     voice_auto_join = True
-    voice_auto_join_channel_id = '808737613544292373'
+    voice_auto_join_channel_id = 808737613544292373
 

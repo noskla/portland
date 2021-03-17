@@ -113,17 +113,20 @@ class CommandHandler:
                 return await msgctx.channel.send(
                     '{}, kanał głosowy, na którym się znajdujesz jest pełny i nie mogę dołączyć.'.format(
                         msgctx.author.mention))
-        if not self.voice.voice_enabled:
+        if not self.voice.voice_enabled or Config.voice_auto_join:
             return await msgctx.channel.send('{}, wsparcie dla kanałów głosowych jest wyłączone.'.format(
                 msgctx.author.mention))
+        if msgctx.guild.voice_client is not None:
+            if msgctx.guild.voice_client.channel.id == msgctx.author.voice.channel.id:
+                return await msgctx.channel.send('{}, jestem już na tym kanale.'.format(msgctx.author.mention))
         try:
             await self.leave(args, msgctx, client, False)
         except KeyError:
             pass
 
         try:
-            await msgctx.channel.send('{}, łączę się z {}...'.format(msgctx.author.mention,
-                                                                     msgctx.author.voice.channel.name))
+            await msgctx.channel.send('{}, łączę się z **{}**...'.format(msgctx.author.mention,
+                                                                         msgctx.author.voice.channel.name))
             self.voice.voice_channels[msgctx.guild.id] = await msgctx.author.voice.channel.connect(timeout=120,
                                                                                                    reconnect=True)
         except asyncio.TimeoutError as err:

@@ -1,4 +1,4 @@
-import discord, logging, sys
+import discord, logging, sys, asyncio
 from config import Config
 from commandhandler import CommandHandler
 
@@ -25,6 +25,26 @@ class Portland(discord.Client):
     async def on_ready(self):
         print('Portland is connected to Discord and logged in as {}'.format(self.user.name))
         self.command_handler.start_voice_info_loop(self)
+        if not Config.voice_auto_join or not self.command_handler.voice.voice_enabled:
+            return
+        channel = self.get_channel(Config.voice_auto_join_channel_id)
+        while 1:
+            member_count = len([a for a in channel.members if not a.id == self.user.id])
+            if channel.guild.voice_client is None and member_count > 0:
+                channel = self.get_channel(Config.voice_auto_join_channel_id)
+                self.command_handler.voice.voice_channels[channel.guild.id] = await channel.connect(timeout=15,
+                                                                                                    reconnect=True)
+                if not self.command_handler.voice.voice_channels[channel.guild.id].is_playing():
+                    self.command_handler.voice.voice_channels[channel.guild.id].play(
+                        self.command_handler.voice.audio_source)
+
+            elif channel.guild.voice_client is not None and not member_count:
+                self.command_handler.voice.voice_channels[channel.guild.id].stop()
+                await self.command_handler.voice.voice_channels[channel.guild.id].disconnect()
+                self.command_handler.voice.voice_channels[channel.guild.id].cleanup()
+                self.command_handler.voice.voice_channels.pop(channel.guild.id)
+                self.command_handler.voice.restart_source()
+            await asyncio.sleep(5)
 
     async def on_message(self, msg):
         if not msg.content.startswith(Config.default_prefix) or msg.author.bot:
