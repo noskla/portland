@@ -11,7 +11,8 @@ class CommandHandler:
         self._functions = {
             'song': self.song,
             'next': self.next,
-            'last': self.last
+            'last': self.last,
+            'now':  self.now
         }
         locale.setlocale(locale.LC_TIME, 'pl_PL')
 
@@ -22,6 +23,7 @@ class CommandHandler:
             await msgctx.channel.send(
                 '{}, nie zrozumiałam tego polecenia, upewnij się, że ono istnieje oraz, że zostało napisane poprawnie.'.format(
                     msgctx.author.mention))
+        # noinspection PyArgumentList
         await self._functions[cmd](args, msgctx, client)
 
     async def song(self, args, msgctx, client):
@@ -78,4 +80,18 @@ class CommandHandler:
                         date_played.hour, date_played.minute, date_played.strftime('%A'))
             i += 1
         await msgctx.channel.send('{}, ostatnie pięć utworów, które zagrałam to:'.format(msgctx.author.mention) + song_list)
+
+    async def now(self, args, msgctx, client):
+        r = self.api.playing_now()
+        if r['status'] != 'ok':
+            return await msgctx.channel.send('{}, wystąpił błąd: {}'.format(msgctx.author.mention, r['error']))
+        embed = discord.Embed(type='rich', title=r['title'],
+            url='https://youtube.com/results?search_query={}'.format(
+            urllib.parse.quote(r['artist'] + ' - ' + r['title'])))
+        embed.set_thumbnail(url='{}/song/{}/albumart'.format(self.api.url, str(r['ID'])))
+        embed.add_field(name='Album', value=r['album'] if r['album'] != 'Single' else 'Brak', inline=True)
+        embed.add_field(name='Gatunek', value=r['genre'], inline=True)
+        embed.add_field(name='Rok premiery', value=r['release_date'], inline=True)
+        embed.set_author(name=r['artist'])
+        await msgctx.channel.send(msgctx.author.mention + ', teraz nadajemy:', embed=embed)
 

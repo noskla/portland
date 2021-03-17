@@ -41,3 +41,7 @@ class API:
     def history(self):
         r = requests.get('{}/history?limit=5'.format(self.url))
         return _check_errors(r)
+
+    def playing_now(self):
+        r = requests.get('{}/now'.format(self.url))
+        return _check_errors(r)
