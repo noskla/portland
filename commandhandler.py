@@ -1,7 +1,7 @@
 from api import API
 from voice import Voice
 from config import Config
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import discord, urllib.parse, pytz, locale, asyncio
 
 
@@ -16,7 +16,9 @@ class CommandHandler:
             'last': self.last,
             'now': self.now,
             'join': self.join,
-            'leave': self.leave
+            'leave': self.leave,
+            'help': self.help,
+            'autojoin': self.autojoin
         }
         locale.setlocale(locale.LC_TIME, 'pl_PL')
 
@@ -96,12 +98,17 @@ class CommandHandler:
         r = self.api.playing_now()
         if r['status'] != 'ok':
             return await msgctx.channel.send('{}, wystąpił błąd: {}'.format(msgctx.author.mention, r['error']))
-        embed = discord.Embed(type='rich', title=r['title'], url='https://laspegas.us/portland')
+        embed = discord.Embed(type='rich', title=r['title'], url='https://laspegas.us/portland', color=0xf24b9e)
         embed.set_thumbnail(url='{}/song/{}/albumart'.format(self.api.url, str(r['ID'])))
         embed.add_field(name='Album', value=r['album'] if r['album'] != 'Single' else 'Brak', inline=True)
         embed.add_field(name='Gatunek', value=r['genre'], inline=True)
         embed.add_field(name='Rok premiery', value=r['release_date'], inline=True)
+        embed.add_field(name='Słuchacze', value=str(r['listeners']), inline=True)
+        embed.add_field(name='Czas trwania', value='{} / {} (ukończono {}%)'.format(
+            str(timedelta(seconds=r['time_elapsed'])), str(timedelta(seconds=r['song_length'])),
+            str(round(100 * r['time_elapsed'] / r['song_length']))), inline=True)
         embed.set_author(name=r['artist'])
+        embed.set_footer(icon_url="https://laspegas.us/static/img/logo/tiny.png", text="Słuchaj na https://laspegas.us/")
         await msgctx.channel.send(msgctx.author.mention + ', teraz nadajemy:', embed=embed)
 
     async def join(self, args, msgctx, client):
@@ -150,6 +157,9 @@ class CommandHandler:
             self.voice.voice_channels[msgctx.guild.id].play(self.voice.audio_source)
 
     async def leave(self, args, msgctx, client, send_message=True):
+        if Config.voice_auto_join:
+            return await msgctx.channel.send('{}, nie mogę opuścić kanału, kiedy autojoin jest włączony.'.format(
+                msgctx.author.mention))
         self.voice.voice_channels[msgctx.guild.id].stop()
         await self.voice.voice_channels[msgctx.guild.id].disconnect()
         self.voice.voice_channels[msgctx.guild.id].cleanup()
@@ -157,3 +167,36 @@ class CommandHandler:
         self.voice.restart_source()
         if send_message:
             await msgctx.channel.send('{}, ok, wychodzę z kanału...'.format(msgctx.author.mention))
+
+    async def help(self, args, msgctx, client):
+        embed = discord.Embed(type='rich', title='Komendy:', color=0xf24b9e)
+        embed.add_field(name=Config.default_prefix + "now", value="Aktualnie odtwarzany utwór")
+        embed.add_field(name=Config.default_prefix + "next", value="Następny utwór w kolejce")
+        embed.add_field(name=Config.default_prefix + "last", value="Historia ostatnich utworów")
+        embed.add_field(name=Config.default_prefix + "song [ID]", value="Wyszukaj utwór po ID")
+        embed.add_field(name=Config.default_prefix + "song [nazwa]", value="Wyszukaj utwór po nazwie")
+        embed.add_field(name=Config.default_prefix + "join", value="Dołącz do kanału, w którym jestem")
+        embed.add_field(name=Config.default_prefix + "leave", value="Wyjdź z aktualnego kanału")
+        embed.add_field(name=Config.default_prefix + "autojoin", value="Konfiguruj funkcję autojoin")
+        embed.set_footer(text="Ten bot jest open-source: github.com/noskla/portland")
+        await msgctx.channel.send('{}, oto moje najprzydatniejsze polecenia:'.format(msgctx.author.mention),
+                                  embed=embed)
+
+    async def autojoin(self, args, msgctx, client):
+        if not msgctx.author.guild_permissions.administrator:
+            return await msgctx.channel.send(
+                '{}, potrzebujesz uprawnień administratora do wykonania tej komendy.'.format(msgctx.author.mention))
+        if 'disable' in args:
+            Config.voice_auto_join = False
+            return await msgctx.channel.send('{}, autojoin został tymczasowo wstrzymany.'.format(msgctx.author.mention))
+        elif 'enable' in args:
+            if not Config.voice_auto_join_channel_id:
+                return await msgctx.channel.send(
+                    '{}, autojoin nie może zostać uruchomiony - kanał nie jest skonfigurowany'.format(
+                        msgctx.author.mention))
+            Config.voice_auto_join = True
+            return await msgctx.channel.send('{}, autojoin został uruchomiony.'.format(msgctx.author.mention))
+        elif 'status' in args:
+            return await msgctx.channel.send('{}, autojoin jest obecnie {}.'.format(
+                msgctx.author.mention, 'włączony' if Config.voice_auto_join else 'wyłączony'))
+        msgctx.channel.send('{}, to polecenie wymaga argumentu.'.format(msgctx.author.mention))
