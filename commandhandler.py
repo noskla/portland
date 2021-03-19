@@ -2,7 +2,7 @@ from api import API
 from voice import Voice
 from config import Config
 from datetime import datetime, timezone, timedelta
-import discord, urllib.parse, pytz, locale, asyncio
+import discord, urllib.parse, pytz, locale, asyncio, psutil, os
 
 
 class CommandHandler:
@@ -20,7 +20,10 @@ class CommandHandler:
             'help': self.help,
             'autojoin': self.autojoin
         }
-        locale.setlocale(locale.LC_TIME, 'pl_PL')
+        if os.name == 'nt':
+            locale.setlocale(locale.LC_ALL, 'pl-PL.UTF8')
+        else:
+            locale.setlocale(locale.LC_TIME, 'pl_PL.UTF8')
 
     def start_voice_info_loop(self, client):
         self.voice = Voice()
@@ -162,7 +165,11 @@ class CommandHandler:
                 msgctx.author.mention))
         self.voice.voice_channels[msgctx.guild.id].stop()
         await self.voice.voice_channels[msgctx.guild.id].disconnect()
-        self.voice.voice_channels[msgctx.guild.id].cleanup()
+        for proc in psutil.Process().children(recursive=True):
+            print(proc.name())
+            if 'ffmpeg' in proc.name():
+                print('killing')
+                proc.kill()
         self.voice.voice_channels.pop(msgctx.guild.id)
         self.voice.restart_source()
         if send_message:

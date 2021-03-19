@@ -1,5 +1,5 @@
 from config import Config
-import discord, asyncio
+import discord, asyncio, subprocess
 
 
 class Voice:

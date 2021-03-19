@@ -1,4 +1,4 @@
-import discord, logging, sys, asyncio
+import discord, logging, sys, asyncio, psutil
 from config import Config
 from commandhandler import CommandHandler
 
@@ -41,7 +41,11 @@ class Portland(discord.Client):
             elif channel.guild.voice_client is not None and not member_count and Config.voice_auto_join:
                 self.command_handler.voice.voice_channels[channel.guild.id].stop()
                 await self.command_handler.voice.voice_channels[channel.guild.id].disconnect()
-                self.command_handler.voice.voice_channels[channel.guild.id].cleanup()
+                for proc in psutil.Process().children(recursive=True):
+                    print(proc.name())
+                    if 'ffmpeg' in proc.name():
+                        print('killing')
+                        proc.kill()
                 self.command_handler.voice.voice_channels.pop(channel.guild.id)
                 self.command_handler.voice.restart_source()
             await asyncio.sleep(5)
