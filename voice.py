@@ -1,5 +1,5 @@
 from config import Config
-import discord, asyncio
+import discord, asyncio, socket
 
 
 class Voice:
@@ -11,7 +11,9 @@ class Voice:
         if self.voice_enabled:
             try:
                 self.audio_source = discord.FFmpegOpusAudio(source=Config.stream_url,
-                                                            executable=Config.ffmpeg_executable)
+                                                            executable=Config.ffmpeg_executable,
+                                                            before_options='-user_agent "Portland ({})"'.format(
+                                                                socket.gethostname()))
             except discord.ClientException as err:
                 print("Error occurred while initializing FFmpeg:", err)
                 self.audio_enabled = False
@@ -32,7 +34,9 @@ class Voice:
 
     def restart_source(self):
         try:
-            self.audio_source = discord.FFmpegOpusAudio(source=Config.stream_url, executable=Config.ffmpeg_executable)
+            self.audio_source = discord.FFmpegOpusAudio(source=Config.stream_url, executable=Config.ffmpeg_executable,
+                                                        before_options='-user_agent "Portland ({})"'.format(
+                                                            socket.gethostname()))
             self.audio_enabled = True
         except discord.ClientException as err:
             print("Error occurred while initializing FFmpeg:", err)
