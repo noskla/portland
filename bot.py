@@ -30,7 +30,7 @@ class Portland(discord.Client):
         channel = self.get_channel(Config.voice_auto_join_channel_id)
         while 1:
             member_count = len([a for a in channel.members if not a.id == self.user.id])
-            if channel.guild.voice_client is None and member_count > 0:
+            if channel.guild.voice_client is None and member_count > 0 and Config.voice_auto_join:
                 channel = self.get_channel(Config.voice_auto_join_channel_id)
                 self.command_handler.voice.voice_channels[channel.guild.id] = await channel.connect(timeout=15,
                                                                                                     reconnect=True)
@@ -38,7 +38,7 @@ class Portland(discord.Client):
                     self.command_handler.voice.voice_channels[channel.guild.id].play(
                         self.command_handler.voice.audio_source)
 
-            elif channel.guild.voice_client is not None and not member_count:
+            elif channel.guild.voice_client is not None and not member_count and Config.voice_auto_join:
                 self.command_handler.voice.voice_channels[channel.guild.id].stop()
                 await self.command_handler.voice.voice_channels[channel.guild.id].disconnect()
                 self.command_handler.voice.voice_channels[channel.guild.id].cleanup()
