@@ -166,9 +166,7 @@ class CommandHandler:
         self.voice.voice_channels[msgctx.guild.id].stop()
         await self.voice.voice_channels[msgctx.guild.id].disconnect()
         for proc in psutil.Process().children(recursive=True):
-            print(proc.name())
             if 'ffmpeg' in proc.name():
-                print('killing')
                 proc.kill()
         self.voice.voice_channels.pop(msgctx.guild.id)
         self.voice.restart_source()

@@ -42,9 +42,7 @@ class Portland(discord.Client):
                 self.command_handler.voice.voice_channels[channel.guild.id].stop()
                 await self.command_handler.voice.voice_channels[channel.guild.id].disconnect()
                 for proc in psutil.Process().children(recursive=True):
-                    print(proc.name())
                     if 'ffmpeg' in proc.name():
-                        print('killing')
                         proc.kill()
                 self.command_handler.voice.voice_channels.pop(channel.guild.id)
                 self.command_handler.voice.restart_source()
