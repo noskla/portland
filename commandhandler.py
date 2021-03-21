@@ -54,9 +54,8 @@ class CommandHandler:
                 try:
                     song = r['songs'][0]
                 except IndexError:
-                    return await msgctx.channel.send('{}, nie mogę znaleźć utworu o takiej nazwie. ' +
-                                                     'Chcesz by trafił na antenę? Oznacz kogoś z moderacji!'.format(
-                                                         msgctx.author.mention))
+                    return await msgctx.channel.send('{}, nie mogę znaleźć utworu o takiej nazwie. '.format(
+                        msgctx.author.mention) + 'Chcesz by trafił na antenę? Oznacz kogoś z moderacji!')
         except KeyError:
             return await msgctx.channel.send('{}, wystąpił błąd: {}'.format(msgctx.author.mention, r['error']))
 
