@@ -51,7 +51,12 @@ class CommandHandler:
                 song = r['song']
             elif mode == 'search':
                 r = self.api.find_song(args)
-                song = r['songs'][0]
+                try:
+                    song = r['songs'][0]
+                except IndexError:
+                    return await msgctx.channel.send('{}, nie mogę znaleźć utworu o takiej nazwie. ' +
+                                                     'Chcesz by trafił na antenę? Oznacz kogoś z moderacji!'.format(
+                                                         msgctx.author.mention))
         except KeyError:
             return await msgctx.channel.send('{}, wystąpił błąd: {}'.format(msgctx.author.mention, r['error']))
 
